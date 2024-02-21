@@ -10,7 +10,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer
-import random   
+import random
+import server  as serv 
 
 
 class Ui_MainWindow(object):
@@ -235,6 +236,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.server = serv.server()
         self.start_selection()
 
     def retranslateUi(self, MainWindow):
@@ -250,10 +252,12 @@ class Ui_MainWindow(object):
         self.picktimer.start()
 
     def random_pick(self):
-        self.current_value_0.setText(str(random.randint(0, 10)))
-        self.current_value_1.setText(str(random.randint(0, 10)))
-        self.current_value_2.setText(str(random.randint(0, 10)))
-        self.current_value_3.setText(str(random.randint(0, 10)))
+        measurements = self.server.recv_and_send()
+        measurements = [x for x in measurements.split()]
+        self.current_value_0.setText(measurements[0])
+        self.current_value_1.setText(measurements[1])
+        self.current_value_2.setText(measurements[2])
+        self.current_value_3.setText(measurements[3])
         self.progressBar.setValue(random.randint(0, 100))
 
     def retranslateUi(self, MainWindow):
