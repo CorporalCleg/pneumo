@@ -25,7 +25,7 @@ class server():
     def recv_and_send(self):
         conn, _ = self.server.accept()
         data = conn.recv(1024)
-        print(data.decode())
+        #print(data.decode())
         message = 'hello from server'
         conn.send(message.encode())
         conn.close()
