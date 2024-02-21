@@ -1,4 +1,4 @@
-import form
+import form_v0_0_2 as form
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
