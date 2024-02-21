@@ -57,6 +57,7 @@ class Ui_MainWindow(object):
         self.target_value_0.setGeometry(QtCore.QRect(90, 120, 141, 31))
         self.target_value_0.setStyleSheet("background-color: rgb(5, 13, 152);\n"
 "border-color: rgb(0, 0, 0);\n"
+"color: rgb(255, 255, 255);\n"
 "font: 75 11pt \"Carlito\";")
         self.target_value_0.setFrameShape(QtWidgets.QFrame.Box)
         self.target_value_0.setObjectName("target_value_0")
@@ -78,6 +79,7 @@ class Ui_MainWindow(object):
         self.target_value_1.setGeometry(QtCore.QRect(560, 120, 141, 31))
         self.target_value_1.setStyleSheet("background-color: rgb(5, 13, 152);\n"
 "border-color: rgb(0, 0, 0);\n"
+"color: rgb(255, 255, 255);\n"
 "font: 75 11pt \"Carlito\";")
         self.target_value_1.setFrameShape(QtWidgets.QFrame.Box)
         self.target_value_1.setObjectName("target_value_1")
@@ -142,6 +144,7 @@ class Ui_MainWindow(object):
         self.target_value_2.setGeometry(QtCore.QRect(90, 120, 141, 31))
         self.target_value_2.setStyleSheet("background-color: rgb(5, 13, 152);\n"
 "border-color: rgb(0, 0, 0);\n"
+"color: rgb(255, 255, 255);\n"
 "font: 75 11pt \"Carlito\";")
         self.target_value_2.setFrameShape(QtWidgets.QFrame.Box)
         self.target_value_2.setObjectName("target_value_2")
@@ -163,6 +166,7 @@ class Ui_MainWindow(object):
         self.target_value_3.setGeometry(QtCore.QRect(560, 120, 141, 31))
         self.target_value_3.setStyleSheet("background-color: rgb(5, 13, 152);\n"
 "border-color: rgb(0, 0, 0);\n"
+"color: rgb(255, 255, 255);\n"
 "font: 75 11pt \"Carlito\";")
         self.target_value_3.setFrameShape(QtWidgets.QFrame.Box)
         self.target_value_3.setObjectName("target_value_3")
@@ -191,7 +195,7 @@ class Ui_MainWindow(object):
         self.label.setGeometry(QtCore.QRect(260, 380, 270, 20))
         self.label.setStyleSheet("\n"
 "font: 75 11pt \"Carlito\";\n"
-"font-color:rgb(20, 20, 205)")
+"color:rgb(0, 0, 250)")
         self.label.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.label.setTextFormat(QtCore.Qt.PlainText)
         self.label.setObjectName("label")
