@@ -180,5 +180,5 @@ qt5-applications = ">=5.15.2.2.2,<5.15.2.3"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.10"
-content-hash = "b63d2945ba3bc68bdf65a0296af99941ae81bbb9f70329e4834c7a460d931d3b"
+python-versions = "^3.9"
+content-hash = "73e225535b958d31f73cf784234bf1ee623d64208d5cce21d64f988722ef6f39"
