@@ -73,7 +73,22 @@ float new_pid(float p){
       return output;
 }
 
-// boolean is_data_transmitted = false;
+//Ввод переменной для чтения данных из Serial порта
+bool newData = false;
+//
+const byte numChars = 32;
+char receivedChars[numChars];
+char tempChars[numChars];
+//
+char messageFromPC[numChars] = {0};
+//Команды для ввода из порта ПК
+char *set_pressure_command = "set_pressure";
+// char *set_KP_command = "set_Kp";
+// char *set_KD_command = "set_Kd";
+// char *set_KI_command = "set_Ki";
+//Переменная для хранения числа из порта ПК
+float floatFromPC = 0.0;
+//
 
 void setup() {
   pinMode(in1, OUTPUT);    // Установка пина 5 как выход
@@ -107,6 +122,8 @@ void setup() {
 // the loop routine runs over and over again forever:
 void loop() {
 
+  input_handler();
+  
   adc0 = ads.readADC_SingleEnded(0); // Чтение АЦП нулевого канала
   adc1 = ads.readADC_SingleEnded(1); // Чтение АЦП первого канала
   adc2 = ads.readADC_SingleEnded(2); // Чтение АЦП второго канала
@@ -124,44 +141,50 @@ void loop() {
   pressure2 = (voltage2 - 2.7) / 0.025; //Давление в мини-объеме
   pressure3 = (voltage3 - 2.7) / 0.025;
   
-  //Вывод показаний датчиков в Serail порт с интервалом в 500 мс
+  //Вывод показаний датчиков в Serail порт с интервалом в 200 мс
   if (millis() - timer >= 200) { 
     // Serial.print("The pressure on first sensor is "); // print text
     Serial.print("Pressure in the pump:");
     Serial.println(pressure0, 1); // print pressure reading
     Serial.print("Pressure in the tank:");
     Serial.println(pressure1, 2);
-    Serial.print("Pressure in the mini-volume:");
-    Serial.println(pressure2, 2);
-    Serial.print("Pressure in the mini-volume2:");
-    Serial.println(pressure3, 3);
+    // Serial.print("Pressure in the mini-volume:");
+    // Serial.println(pressure2, 2);
+    // Serial.print("Pressure in the mini-volume2:");
+    // Serial.println(pressure3, 3);
     timer = millis();
   }    
 
-if(abs(pressure0) < 80)
-{  if (abs(pressure0) < abs(minimum_pressure)) {
+  if (abs(pressure0) < abs(minimum_pressure)) {
     digitalWrite(in1, HIGH);
   }
   if (abs(pressure0) >= abs(pump_stable_pressure)) {
       digitalWrite(in1, LOW);
-  }}
+  }
+  // delay(100);
   //Условие активации ПИД регулирования - когда насос выключен, чтобы избежать нежелательных колебаний давления
  // if ((digitalRead(in1) == LOW))  {
     //tank_regulator.input = abs(pressure2);   // сообщаем регулятору текущее давление в контрольном объеме;
-    PID_control_value_tank = new_pid(abs(pressure1));
+  PID_control_value_tank = new_pid(abs(pressure1));
     
-    if ((PID_control_value_tank == -1)) {
-      decrease_pressure();
-
-    } else if (PID_control_value_tank == 1){
+  if ((PID_control_value_tank == -1)) {
+    decrease_pressure();
+  } 
+  else if (PID_control_value_tank == 1){
+    if (abs(desired_pressure + pressure1) >= 5) {
+      highly_increase_pressure();
+    }
+    else {
       increase_pressure();//операция по единичному подъему давления      
-    } else  {
-      digitalWrite(mosfetPin1, LOW);
-      digitalWrite(mosfetPin2, LOW);
-      digitalWrite(mosfetPin3, LOW);
-      digitalWrite(mosfetPin4, LOW);
+    }
+  } 
+  else  {
+    digitalWrite(mosfetPin1, LOW);
+    digitalWrite(mosfetPin2, LOW);
+    digitalWrite(mosfetPin3, LOW);
+    digitalWrite(mosfetPin4, LOW);
     } 
-    delay(500);
+  delay(200);  
 }  
 
 void increase_pressure() {
@@ -174,12 +197,116 @@ void increase_pressure() {
   digitalWrite(mosfetPin3, LOW);  
 }
 
+void highly_increase_pressure() {
+  digitalWrite(mosfetPin1, HIGH);
+  digitalWrite(mosfetPin3, HIGH);
+  delay(tau*2);
+  digitalWrite(mosfetPin3, LOW);
+  digitalWrite(mosfetPin1, LOW);  
+}
+
 void decrease_pressure() {
-  //digitalWrite(mosfetPin2, HIGH);
+  digitalWrite(mosfetPin2, HIGH);
   delay(tau);
   digitalWrite(mosfetPin2, LOW);
   delay(tau + delta);
-  //digitalWrite(mosfetPin4, HIGH);
+  digitalWrite(mosfetPin4, HIGH);
   delay(tau);
   digitalWrite(mosfetPin4, LOW);  
+}
+
+void parseData() { //split the data into its parts
+  char * strtokIndx; //this is used by strtok() as an index
+
+  strtokIndx = strtok(tempChars, " "); //get the firt part - command's name
+  strcpy(messageFromPC, strtokIndx);// copy it to messageFromPC
+
+  strtokIndx = strtok(NULL, " ");
+  floatFromPC = atof(strtokIndx); //convert this part to a float
+}
+
+void applyInputCommand() {
+  // Serial.print("Message ");
+  // Serial.println(messageFromPC);
+  // Serial.print("Desired pressure ");
+  // Serial.println(floatFromPC);
+  if (strcmp(messageFromPC, set_pressure_command) == 0) {
+    if (floatFromPC == 0) {
+      Serial.println("ERROR: INCORRECT PRESSURE UNITS");
+    }
+    else if (abs(floatFromPC) != 0) {     
+      desired_pressure = abs(floatFromPC);
+      // tank_regulator.setpoint = abs(desired_pressure);
+      Serial.print("NEW_DESIRED_PRESSURE_SET = ");
+      Serial.println(desired_pressure);
+    }
+  }
+  // else if (strcmp(messageFromPC, set_KP_command) == 0) {
+  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
+  //     tank_regulator.Kp = floatFromPC;
+  //     Serial.print("NEW_Kp_SET = ");
+  //     Serial.println(floatFromPC);                      
+  //   }
+  //   else {
+  //     Serial.println("Kp is out of range [0,100]");
+  //   }
+  // }
+
+  // else if (strcmp(messageFromPC, set_KD_command) == 0) {
+  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
+  //     tank_regulator.Kd = floatFromPC;
+  //     Serial.print("NEW_Kd_SET = ");
+  //     Serial.println(floatFromPC);                      
+  //   }
+  //   else {
+  //     Serial.println("Kd is out of range [0,100]");
+  //   }
+  // }
+
+  // else if (strcmp(messageFromPC, set_KI_command) == 0) {
+  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
+  //     tank_regulator.Ki = floatFromPC;
+  //     Serial.print("NEW_Ki_SET = ");
+  //     Serial.println(floatFromPC);                      
+  //   }
+  //   else {
+  //     Serial.println("Ki is out of range [0,100]");
+  //   }
+  // }
+  else {
+    Serial.println("ERROR: UNKNOWN COMMAND");
+  }
+}
+void recvData() {
+  static boolean recvInProgress = false;
+  static byte ndx = 0;
+  char endMarker = '\n';
+  char rc;
+
+  while (Serial.available() > 0 && newData == false) {
+    rc = Serial.read();
+    if (rc != endMarker) {
+      receivedChars[ndx] = rc;
+      ndx++;
+      if (ndx >= numChars) {
+        ndx = numChars - 1;
+        }
+      }
+    else {
+      receivedChars[ndx] = '\0'; //terminate the string
+      ndx = 0;
+      newData = true;
+      }
+  }
+}
+void input_handler() {
+  recvData();
+    if (newData == true) {
+      strcpy(tempChars, receivedChars);
+      //this temporary copy is necessary to protect the original data
+      //because strtok() used in parseData() replaces the commas with \0
+      parseData();
+      applyInputCommand();
+      newData = false;
+    }
 }
