@@ -4,7 +4,7 @@ import random
 measure = lambda: " ".join([str(random.randint(0, 10))] * 4)
 client = socket.socket()
 hostname = socket.gethostname()
-port = 12346
+port = 12345
 
 client.connect((hostname, port))
 message = measure().encode()
