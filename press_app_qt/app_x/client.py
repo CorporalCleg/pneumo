@@ -1,7 +1,14 @@
 import socket
 import random
+import serial
 
-measure = lambda: " ".join([str(random.randint(0, 10))] * 4)
+ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+ser.reset_input_buffer()
+
+ser.write(b"set_pressure 22\n")
+line = ser.readline().decode('utf-8').rstrip()
+
+measure = line
 client = socket.socket()
 hostname = socket.gethostname()
 port = 12345
