@@ -11,14 +11,14 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtCore import QTimer
 import random
-import server  as serv
+import server as serv
 
 #tread for comminication with arduino
 class MyThread(QtCore.QThread):
     mysignal = QtCore.pyqtSignal(str)
     def  __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
-        self.server = serv.server()
+        self.server = serv.port()
         self.data = None
 
     def run(self):
