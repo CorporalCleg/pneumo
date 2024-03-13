@@ -1,5 +1,5 @@
 import socket
-
+import json
 # server = socket.socket()
 # hostname = socket.gethostname()
 # port = 12345
@@ -21,17 +21,19 @@ class server():
         self.port = 12345
         self.server.bind((self.hostname, self.port))
         self.server.listen(5)
+        
     
-    def recv_and_send(self):
-        conn, _ = self.server.accept()
-        data = conn.recv(1024)
-        message = 'hello from server'
-        conn.send(message.encode())
-        conn.close()
-
+    def recv(self):
+        self.conn, _ = self.server.accept()
+        data = self.conn.recv(1024)
+        self.conn.close()
         return(data.decode())
 
-# server = server()
+    def send(self, target: dict):
+        self.conn, _ = self.server.accept()
+        data = json.dumps(target).encode()
+        data = self.conn.send(data)
+        self.conn.close()
+        print('call')
 
-# while True:
-#     server.recv_and_send()
+        return
