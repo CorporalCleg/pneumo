@@ -20,8 +20,14 @@ float voltage2; // Значение напряжения на датчике д�
 float pressure2; // Показания давления датчика в контуре контрольного объема
 float voltage3; // Значение напряжения на датчике давления в контуре мини-объема
 float pressure3; // Показания давления датчика в контуре мини-объема
+
 //Определение требуемого давления в контролируемом объеме
 float desired_pressure = abs(-55.0); // целевое значение
+float desired_pressure_speed = 0; //скорость изменения давления ПИТО 
+
+float desired_static = 0; // целевое значение статического давления
+float desired_static_speed = 0; //скорость изменения давления СТАТИУКА
+
 
 float pump_stable_pressure = -70;
 float minimum_pressure = pump_stable_pressure + 5.0;
@@ -237,8 +243,15 @@ void applyInputCommand() {
     else if (abs(floatFromPC) != 0) {     
       desired_pressure = abs(floatFromPC);
       // tank_regulator.setpoint = abs(desired_pressure);
-      Serial.print("NEW_DESIRED_PRESSURE_SET = ");
-      Serial.println(desired_pressure);
+
+      Serial.print(desired_pressure);
+      Serial.print(" ");
+      Serial.print(desired_pressure_speed);
+      Serial.print(" ");
+      Serial.print(desired_static);
+      Serial.print(" ");
+      Serial.println(desired_static_speed);
+      // Serial.println(desired_pressure);
     }
   }
   // else if (strcmp(messageFromPC, set_KP_command) == 0) {
