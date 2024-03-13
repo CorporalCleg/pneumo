@@ -82,7 +82,7 @@ char tempChars[numChars];
 //
 char messageFromPC[numChars] = {0};
 //Команды для ввода из порта ПК
-char *set_pressure_command = "set_pressure";
+const char *set_pressure_command = "set_pressure";
 // char *set_KP_command = "set_Kp";
 // char *set_KD_command = "set_Kd";
 // char *set_KI_command = "set_Ki";
@@ -143,15 +143,13 @@ void loop() {
   
   //Вывод показаний датчиков в Serail порт с интервалом в 200 мс
   if (millis() - timer >= 200) { 
-    // Serial.print("The pressure on first sensor is "); // print text
-    Serial.print("Pressure in the pump:");
-    Serial.println(pressure0, 1); // print pressure reading
-    Serial.print("Pressure in the tank:");
-    Serial.println(pressure1, 2);
-    // Serial.print("Pressure in the mini-volume:");
-    // Serial.println(pressure2, 2);
-    // Serial.print("Pressure in the mini-volume2:");
-    // Serial.println(pressure3, 3);
+    Serial.print(pressure1, 2);
+    Serial.print(" ");
+    Serial.print(0.00);
+    Serial.print(" ");
+    Serial.print(0.00);
+    Serial.print(" ");
+    Serial.println(0.00);
     timer = millis();
   }    
 
@@ -232,13 +230,13 @@ void applyInputCommand() {
   // Serial.println(floatFromPC);
   if (strcmp(messageFromPC, set_pressure_command) == 0) {
     if (floatFromPC == 0) {
-      Serial.println("ERROR: INCORRECT PRESSURE UNITS");
+      //Serial.println("ERROR: INCORRECT PRESSURE UNITS");
     }
     else if (abs(floatFromPC) != 0) {     
       desired_pressure = abs(floatFromPC);
       // tank_regulator.setpoint = abs(desired_pressure);
-      Serial.print("NEW_DESIRED_PRESSURE_SET = ");
-      Serial.println(desired_pressure);
+      //Serial.print("NEW_DESIRED_PRESSURE_SET = ");
+      //Serial.println(desired_pressure);
     }
   }
   // else if (strcmp(messageFromPC, set_KP_command) == 0) {
@@ -274,7 +272,7 @@ void applyInputCommand() {
   //   }
   // }
   else {
-    Serial.println("ERROR: UNKNOWN COMMAND");
+    //Serial.println("ERROR: UNKNOWN COMMAND");
   }
 }
 void recvData() {

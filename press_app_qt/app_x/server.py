@@ -42,19 +42,18 @@ class server():
 class port():
     def __init__(self):
         self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-        self.ser.reset_input_buffer()
+        
     
     def recv(self):
+        self.ser.reset_input_buffer()
         measure = self.ser.readline().decode('utf-8').rstrip().lstrip('(').rstrip(')')
         return measure
 
     def send(self, data: dict):
         if data != '':
-            print(f'Got data {data}')
             target_message = f'set_pressure {list(data.values())[0]}'
             print(target_message)
             self.ser.write(target_message.encode())
-            print(self.ser.readline().decode('utf-8').rstrip().lstrip('(').rstrip(')'))
             print('call')
 
         return
