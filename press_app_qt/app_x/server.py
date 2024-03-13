@@ -54,6 +54,7 @@ class port():
             target_message = f'set_pressure {list(data.values())[0]}'
             print(target_message)
             self.ser.write(target_message.encode())
+            print(self.ser.readline().decode('utf-8').rstrip().lstrip('(').rstrip(')'))
             print('call')
 
         return
