@@ -1,15 +1,37 @@
 import socket
+import serial
+import time
 import random
+import json
 
-measure = lambda: " ".join([str(random.randint(0, 10))] * 4)
-client = socket.socket()
+ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+
 hostname = socket.gethostname()
 port = 12346
 
-client.connect((hostname, port))
-message = measure().encode()
 
-client.send(message)
-data = client.recv(1024)
-print(data.decode())
-client.close()
+def send():
+
+    time.sleep(0.1)
+    client = socket.socket()
+    client.connect((hostname, port))
+    ser.reset_input_buffer()
+    measure = ser.readline().decode('utf-8').rstrip().lstrip('(').rstrip(')')
+    #measure = f'{random.random():.2f} 3.1 2.2 4.4'
+    print(measure)
+    message = measure.encode()
+    client.send(message)
+    data = client.recv(1024).decode()
+    print(data)
+    if data != '':
+        data = json.loads(data)
+        print(f'Got data {data}')
+        target_message = f'set_pressure {list(data.values())[0]}'
+        print(target_message)
+        ser.write(target_message.encode())
+        
+    client.close()
+
+
+while True:
+    send()

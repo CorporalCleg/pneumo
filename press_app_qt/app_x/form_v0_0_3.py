@@ -11,18 +11,21 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtCore import QTimer
 import random
-import server  as serv
+import server as serv
 
-
+#tread for comminication with arduino
 class MyThread(QtCore.QThread):
     mysignal = QtCore.pyqtSignal(str)
     def  __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
-        self.server = serv.server()
+        self.server = serv.port()
         self.data = None
 
     def run(self):
-        self.data = self.server.recv_and_send()
+        self.data = self.server.recv()
+
+    def set_targets(self):
+        self.server.send(self.data)
 
 
 
@@ -274,6 +277,13 @@ class Ui_MainWindow(object):
                            self.staticTargetButton.objectName(): self.target_value_1,
                            self.staticRateTargetButton.objectName(): self.target_value_3}
 
+
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label.setText(_translate("MainWindow", "Messages"))
+
     def set_target(self, caller):
         print(caller)
         text, ok = QInputDialog.getText(self.centralwidget, caller,
@@ -282,12 +292,9 @@ class Ui_MainWindow(object):
         if ok:
             self.target_values[caller].setText(text)
             self.target_map[caller] = float(text)
-            print(self.target_map)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label.setText(_translate("MainWindow", "Messages"))
+            #print(self.target_map)
+            self.my_thread.data = self.target_map
+            self.my_thread.set_targets()
 
     def start_selection(self):
         # Repeating timer, calls random_pick over and over.
@@ -298,6 +305,7 @@ class Ui_MainWindow(object):
 
     def set_new_data(self, data):
         measurements = [x for x in data.split()]
+        print(measurements)
         self.current_value_0.setText(measurements[0])
         self.current_value_1.setText(measurements[1])
         self.current_value_2.setText(measurements[2])

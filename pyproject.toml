@@ -8,6 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 pyqt5 = "=5.15.2"
+matplotlib = "^3.8.3"
+serial = "^0.0.97"
+pyserial = "^3.5"
 
 
 [build-system]
