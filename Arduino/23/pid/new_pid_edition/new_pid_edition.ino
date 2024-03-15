@@ -124,30 +124,41 @@ void loop() {
 
   input_handler();
   
-  adc0 = ads.readADC_SingleEnded(0); // Чтение АЦП нулевого канала
-  adc1 = ads.readADC_SingleEnded(1); // Чтение АЦП первого канала
-  adc2 = ads.readADC_SingleEnded(2); // Чтение АЦП второго канала
-  adc3 = ads.readADC_SingleEnded(3);
+  // adc0 = ads.readADC_SingleEnded(0); // Чтение АЦП нулевого канала
+  // adc1 = ads.readADC_SingleEnded(1); // Чтение АЦП первого канала
+  // adc2 = ads.readADC_SingleEnded(2); // Чтение АЦП второго канала
+  // adc3 = ads.readADC_SingleEnded(3);
 
-  // Расчёт фактических напряжений на каждом канале
-  voltage0= float(adc0) * 0.125 / 1000.0;
-  voltage1 = float(adc1) * 0.125 / 1000.0;
-  voltage2 = float(adc2) * 0.125 / 1000.0;
-  voltage3= float(adc3) * 0.125 / 1000.0;
+  // // Расчёт фактических напряжений на каждом канале
+  // voltage0= float(adc0) * 0.125 / 1000.0;
+  // voltage1 = float(adc1) * 0.125 / 1000.0;
+  // voltage2 = float(adc2) * 0.125 / 1000.0;
+  // voltage3= float(adc3) * 0.125 / 1000.0;
   
-  //Расчет давлений в контурах системы
-  pressure0 = (voltage0 - 2.7) / 0.025; //Давление в насосе
-  pressure1 = (voltage1 - 2.7) / 0.025; //Давление в контрольном объеме
-  pressure2 = (voltage2 - 2.7) / 0.025; //Давление в мини-объеме
-  pressure3 = (voltage3 - 2.7) / 0.025;
+  // //Расчет давлений в контурах системы
+  // pressure0 = (voltage0 - 2.7) / 0.025; //Давление в насосе
+  // pressure1 = (voltage1 - 2.7) / 0.025; //Давление в контрольном объеме
+  // pressure2 = (voltage2 - 2.7) / 0.025; //Давление в мини-объеме
+  // pressure3 = (voltage3 - 2.7) / 0.025;
   
   //Вывод показаний датчиков в Serail порт с интервалом в 200 мс
   if (millis() - timer >= 200) { 
     // Serial.print("The pressure on first sensor is "); // print text
-    Serial.print("Pressure in the pump:");
-    Serial.println(pressure0, 1); // print pressure reading
-    Serial.print("Pressure in the tank:");
-    Serial.println(pressure1, 2);
+    // Serial.print("Pressure in the pump:");
+    // Serial.println(pressure0, 1); // print pressure reading
+    // Serial.print("Pressure in the tank:");
+    // Serial.println(pressure1, 2);
+
+    Serial.print("( ");
+    Serial.print(pressure0, 1); // print pressure reading
+    Serial.print(" ");
+    Serial.print(pressure1, 2);
+    Serial.print(" ");
+    Serial.print(pressure0, 1); // print pressure reading
+    Serial.print(" ");
+    Serial.print(pressure1, 2);
+    Serial.println(" )");    
+
     // Serial.print("Pressure in the mini-volume:");
     // Serial.println(pressure2, 2);
     // Serial.print("Pressure in the mini-volume2:");
@@ -241,64 +252,43 @@ void applyInputCommand() {
       Serial.println(desired_pressure);
     }
   }
-  // else if (strcmp(messageFromPC, set_KP_command) == 0) {
-  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
-  //     tank_regulator.Kp = floatFromPC;
-  //     Serial.print("NEW_Kp_SET = ");
-  //     Serial.println(floatFromPC);                      
-  //   }
-  //   else {
-  //     Serial.println("Kp is out of range [0,100]");
-  //   }
-  // }
-
-  // else if (strcmp(messageFromPC, set_KD_command) == 0) {
-  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
-  //     tank_regulator.Kd = floatFromPC;
-  //     Serial.print("NEW_Kd_SET = ");
-  //     Serial.println(floatFromPC);                      
-  //   }
-  //   else {
-  //     Serial.println("Kd is out of range [0,100]");
-  //   }
-  // }
-
-  // else if (strcmp(messageFromPC, set_KI_command) == 0) {
-  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
-  //     tank_regulator.Ki = floatFromPC;
-  //     Serial.print("NEW_Ki_SET = ");
-  //     Serial.println(floatFromPC);                      
-  //   }
-  //   else {
-  //     Serial.println("Ki is out of range [0,100]");
-  //   }
-  // }
   else {
     Serial.println("ERROR: UNKNOWN COMMAND");
+    Serial.println(messageFromPC);
   }
 }
+
 void recvData() {
   static boolean recvInProgress = false;
   static byte ndx = 0;
-  char endMarker = '\n';
+  char startMarker = '<';
+  char endMarker = '>';
   char rc;
 
   while (Serial.available() > 0 && newData == false) {
     rc = Serial.read();
-    if (rc != endMarker) {
-      receivedChars[ndx] = rc;
-      ndx++;
-      if (ndx >= numChars) {
-        ndx = numChars - 1;
+    if (recvInProgress == true) {
+      if (rc != endMarker) {
+        receivedChars[ndx] = rc;
+        ndx++;
+        if (ndx >= numChars) {
+          ndx = numChars - 1;
         }
+      }    
+      else {
+        receivedChars[ndx] = '\0'; // terminate the string
+        recvInProgress = false;
+        ndx = 0;
+        newData = true;
       }
-    else {
-      receivedChars[ndx] = '\0'; //terminate the string
-      ndx = 0;
-      newData = true;
-      }
+    }
+
+    else if (rc == startMarker) {
+      recvInProgress = true;
+    }
   }
 }
+      
 void input_handler() {
   recvData();
     if (newData == true) {
