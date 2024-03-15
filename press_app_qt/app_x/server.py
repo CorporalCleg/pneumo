@@ -41,7 +41,10 @@ class server():
 
 class port():
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+        try:
+            self.ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+        except:
+            print('No usb device')
         
     
     def recv(self):
@@ -51,7 +54,7 @@ class port():
 
     def send(self, data: dict):
         if data != '':
-            target_message = f'set_pressure {list(data.values())[0]}'
+            target_message = f'<set_pressure {list(data.values())[0]}>'
             print(target_message)
             self.ser.write(target_message.encode())
             print('call')
