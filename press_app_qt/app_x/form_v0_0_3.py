@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtCore import QTimer
 import random
 import server as serv
+import logging
 
 #tread for comminication with arduino
 class MyThread(QtCore.QThread):
@@ -276,6 +277,9 @@ class Ui_MainWindow(object):
                            self.pitotRateTargetButton.objectName() : self.target_value_2, \
                            self.staticTargetButton.objectName(): self.target_value_1,
                            self.staticRateTargetButton.objectName(): self.target_value_3}
+        
+        logging.basicConfig(level=logging.INFO, filename="logger.log",filemode="w",
+                    format="%(asctime)s %(levelname)s %(message)s")
 
 
 
@@ -306,11 +310,16 @@ class Ui_MainWindow(object):
     def set_new_data(self, data):
         measurements = [x for x in data.split()]
         print(measurements)
+        
         self.current_value_0.setText(measurements[0])
         self.current_value_1.setText(measurements[1])
         self.current_value_2.setText(measurements[2])
         self.current_value_3.setText(measurements[3])
-        self.progressBar.setValue(random.randint(0, 100))
+        logging.info(f'measurements: {" ".join(measurements)} \
+                     targets: {" ".join(self.my_thread.data.items())}')
+        
+        #self.progressBar.setValue(random.randint(0, 100)) # <- you may edit power level
+        self.progressBar.setValue(99)
 
     def on_finished(self):      # Вызывается при завершении потока
         self.new_data = self.my_thread.data

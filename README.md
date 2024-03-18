@@ -10,7 +10,7 @@ sh install.sh
 #### 1. Work with CLI inside container:
 
 ```
-docker run --rm -it -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY -u qtuser pneumo bash
+docker run --rm -it -v /tmp/.X11-unix:/tmp/.X11-unix -v $(pwd):/app -e DISPLAY=$DISPLAY -u qtuser -p 12346:12345 --device /dev/ttyUSB1:/dev/ttyUSB0 pneumo bash
 ```
 
 #### 2. Run script with app: 
