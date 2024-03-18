@@ -20,8 +20,14 @@ float voltage2; // Значение напряжения на датчике д�
 float pressure2; // Показания давления датчика в контуре контрольного объема
 float voltage3; // Значение напряжения на датчике давления в контуре мини-объема
 float pressure3; // Показания давления датчика в контуре мини-объема
+
 //Определение требуемого давления в контролируемом объеме
 float desired_pressure = abs(-55.0); // целевое значение
+float desired_pressure_speed = 0; //скорость изменения давления ПИТО 
+
+float desired_static = 0; // целевое значение статического давления
+float desired_static_speed = 0; //скорость изменения давления СТАТИУКА
+
 
 float pump_stable_pressure = -70;
 float minimum_pressure = pump_stable_pressure + 5.0;
@@ -82,7 +88,7 @@ char tempChars[numChars];
 //
 char messageFromPC[numChars] = {0};
 //Команды для ввода из порта ПК
-char *set_pressure_command = "set_pressure";
+const char *set_pressure_command = "set_pressure";
 // char *set_KP_command = "set_Kp";
 // char *set_KD_command = "set_Kd";
 // char *set_KI_command = "set_Ki";
@@ -123,68 +129,65 @@ void setup() {
 void loop() {
 
   input_handler();
-  
+    
   adc0 = ads.readADC_SingleEnded(0); // Чтение АЦП нулевого канала
   adc1 = ads.readADC_SingleEnded(1); // Чтение АЦП первого канала
   adc2 = ads.readADC_SingleEnded(2); // Чтение АЦП второго канала
   adc3 = ads.readADC_SingleEnded(3);
 
-  // Расчёт фактических напряжений на каждом канале
-  voltage0= float(adc0) * 0.125 / 1000.0;
-  voltage1 = float(adc1) * 0.125 / 1000.0;
-  voltage2 = float(adc2) * 0.125 / 1000.0;
-  voltage3= float(adc3) * 0.125 / 1000.0;
-  
-  //Расчет давлений в контурах системы
-  pressure0 = (voltage0 - 2.7) / 0.025; //Давление в насосе
-  pressure1 = (voltage1 - 2.7) / 0.025; //Давление в контрольном объеме
-  pressure2 = (voltage2 - 2.7) / 0.025; //Давление в мини-объеме
-  pressure3 = (voltage3 - 2.7) / 0.025;
   
   //Вывод показаний датчиков в Serail порт с интервалом в 200 мс
   if (millis() - timer >= 200) { 
-    // Serial.print("The pressure on first sensor is "); // print text
-    Serial.print("Pressure in the pump:");
-    Serial.println(pressure0, 1); // print pressure reading
-    Serial.print("Pressure in the tank:");
-    Serial.println(pressure1, 2);
-    // Serial.print("Pressure in the mini-volume:");
-    // Serial.println(pressure2, 2);
-    // Serial.print("Pressure in the mini-volume2:");
-    // Serial.println(pressure3, 3);
-    timer = millis();
-  }    
-
-  if (abs(pressure0) < abs(minimum_pressure)) {
-    digitalWrite(in1, HIGH);
-  }
-  if (abs(pressure0) >= abs(pump_stable_pressure)) {
-      digitalWrite(in1, LOW);
-  }
-  // delay(100);
-  //Условие активации ПИД регулирования - когда насос выключен, чтобы избежать нежелательных колебаний давления
- // if ((digitalRead(in1) == LOW))  {
-    //tank_regulator.input = abs(pressure2);   // сообщаем регулятору текущее давление в контрольном объеме;
-  PID_control_value_tank = new_pid(abs(pressure1));
+    // Расчёт фактических напряжений на каждом канале
+    voltage0= float(adc0) * 0.125 / 1000.0;
+    voltage1 = float(adc1) * 0.125 / 1000.0;
+    voltage2 = float(adc2) * 0.125 / 1000.0;
+    voltage3= float(adc3) * 0.125 / 1000.0;
     
-  if ((PID_control_value_tank == -1)) {
-    decrease_pressure();
-  } 
-  else if (PID_control_value_tank == 1){
-    if (abs(desired_pressure + pressure1) >= 5) {
-      highly_increase_pressure();
+    // //Расчет давлений в контурах системы
+    pressure0 = (voltage0 - 2.7) / 0.025; //Давление в насосе
+    pressure1 = (voltage1 - 2.7) / 0.025; //Давление в контрольном объеме
+    pressure2 = (voltage2 - 2.7) / 0.025; //Давление в мини-объеме
+    pressure3 = (voltage3 - 2.7) / 0.025;
+
+    Serial.print(pressure1, 2);
+    Serial.print(" ");
+    Serial.print(0.00);
+    Serial.print(" ");
+    Serial.print(0.00);
+    Serial.print(" ");
+    Serial.println(0.00);
+
+    if (abs(pressure0) < abs(minimum_pressure)) {
+      digitalWrite(in1, HIGH);
     }
-    else {
-      increase_pressure();//операция по единичному подъему давления      
+    
+    if (abs(pressure0) >= abs(pump_stable_pressure)) {
+        digitalWrite(in1, LOW);
     }
-  } 
-  else  {
-    digitalWrite(mosfetPin1, LOW);
-    digitalWrite(mosfetPin2, LOW);
-    digitalWrite(mosfetPin3, LOW);
-    digitalWrite(mosfetPin4, LOW);
+    
+    PID_control_value_tank = new_pid(abs(pressure1));
+      
+    if ((PID_control_value_tank == -1)) {
+      decrease_pressure();
     } 
-  delay(200);  
+    else if (PID_control_value_tank == 1){
+      if (abs(desired_pressure + pressure1) >= 5) {
+        highly_increase_pressure();
+      } else {
+        increase_pressure();//операция по единичному подъему давления      
+      }
+    } else {
+      
+      digitalWrite(mosfetPin1, LOW);
+      digitalWrite(mosfetPin2, LOW);
+      digitalWrite(mosfetPin3, LOW);
+      digitalWrite(mosfetPin4, LOW);
+      
+    }
+    timer = millis();
+  }     
+  
 }  
 
 void increase_pressure() {
@@ -232,73 +235,61 @@ void applyInputCommand() {
   // Serial.println(floatFromPC);
   if (strcmp(messageFromPC, set_pressure_command) == 0) {
     if (floatFromPC == 0) {
-      Serial.println("ERROR: INCORRECT PRESSURE UNITS");
+      //Serial.println("ERROR: INCORRECT PRESSURE UNITS");
     }
     else if (abs(floatFromPC) != 0) {     
       desired_pressure = abs(floatFromPC);
       // tank_regulator.setpoint = abs(desired_pressure);
-      Serial.print("NEW_DESIRED_PRESSURE_SET = ");
-      Serial.println(desired_pressure);
+
+//      Serial.print(desired_pressure);
+//      Serial.print(" ");
+//      Serial.print(desired_pressure_speed);
+//      Serial.print(" ");
+//      Serial.print(desired_static);
+//      Serial.print(" ");
+//      Serial.println(desired_static_speed);
+      // Serial.println(desired_pressure);
+      //Serial.print("NEW_DESIRED_PRESSURE_SET = ");
+      //Serial.println(desired_pressure);
     }
   }
-  // else if (strcmp(messageFromPC, set_KP_command) == 0) {
-  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
-  //     tank_regulator.Kp = floatFromPC;
-  //     Serial.print("NEW_Kp_SET = ");
-  //     Serial.println(floatFromPC);                      
-  //   }
-  //   else {
-  //     Serial.println("Kp is out of range [0,100]");
-  //   }
-  // }
-
-  // else if (strcmp(messageFromPC, set_KD_command) == 0) {
-  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
-  //     tank_regulator.Kd = floatFromPC;
-  //     Serial.print("NEW_Kd_SET = ");
-  //     Serial.println(floatFromPC);                      
-  //   }
-  //   else {
-  //     Serial.println("Kd is out of range [0,100]");
-  //   }
-  // }
-
-  // else if (strcmp(messageFromPC, set_KI_command) == 0) {
-  //   if ((floatFromPC >= 0) && (floatFromPC <= 100)) {
-  //     tank_regulator.Ki = floatFromPC;
-  //     Serial.print("NEW_Ki_SET = ");
-  //     Serial.println(floatFromPC);                      
-  //   }
-  //   else {
-  //     Serial.println("Ki is out of range [0,100]");
-  //   }
-  // }
   else {
-    Serial.println("ERROR: UNKNOWN COMMAND");
+    //Serial.println("ERROR: UNKNOWN COMMAND");
+    //Serial.println(messageFromPC);
   }
 }
+
 void recvData() {
   static boolean recvInProgress = false;
   static byte ndx = 0;
-  char endMarker = '\n';
+  char startMarker = '<';
+  char endMarker = '>';
   char rc;
 
   while (Serial.available() > 0 && newData == false) {
     rc = Serial.read();
-    if (rc != endMarker) {
-      receivedChars[ndx] = rc;
-      ndx++;
-      if (ndx >= numChars) {
-        ndx = numChars - 1;
+    if (recvInProgress == true) {
+      if (rc != endMarker) {
+        receivedChars[ndx] = rc;
+        ndx++;
+        if (ndx >= numChars) {
+          ndx = numChars - 1;
         }
+      }    
+      else {
+        receivedChars[ndx] = '\0'; // terminate the string
+        recvInProgress = false;
+        ndx = 0;
+        newData = true;
       }
-    else {
-      receivedChars[ndx] = '\0'; //terminate the string
-      ndx = 0;
-      newData = true;
-      }
+    }
+
+    else if (rc == startMarker) {
+      recvInProgress = true;
+    }
   }
 }
+      
 void input_handler() {
   recvData();
     if (newData == true) {

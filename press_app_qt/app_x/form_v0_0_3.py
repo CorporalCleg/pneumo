@@ -305,6 +305,7 @@ class Ui_MainWindow(object):
 
     def set_new_data(self, data):
         measurements = [x for x in data.split()]
+        print(measurements)
         self.current_value_0.setText(measurements[0])
         self.current_value_1.setText(measurements[1])
         self.current_value_2.setText(measurements[2])
