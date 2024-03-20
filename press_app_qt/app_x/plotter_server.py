@@ -4,13 +4,15 @@ from matplotlib.animation import FuncAnimation
 from icecream import ic
 
 
-class server():
+class pserver():
     def __init__(self, window_size=10):
         self.server = socket.socket()
-        self.hostname = socket.gethostname()
-        self.port = 12345
+        self.hostname = 'localhost'
+        print(self.hostname)
+        self.port = 1414
         self.server.bind((self.hostname, self.port))
         self.server.listen(5)
+
         self.window_size = window_size
         self.time = [0]
         self.targets = [0.0]
@@ -45,6 +47,8 @@ class server():
 
             
         else:
+            axes.plot(self.time, self.data, color="red", label='measurements')
+            axes.plot(self.time, self.targets, color="blue", label='target')
             self.data.append(float(measure))
             self.targets.append(float(target))
             self.time.append(self.time[-1] + 1)
@@ -58,7 +62,7 @@ if __name__ == '__main__':
     plt.style.use("ggplot")
     plt.ylim(-2, 2)
 
-    s = server()
-    anim = FuncAnimation(fig, lambda frame: s.recv_n_redraw(frame), frames = None)
+    s = pserver()
+    anim = FuncAnimation(fig, lambda frame: s.recv_n_redraw(frame), frames = None, interval=500)
 
     plt.show()

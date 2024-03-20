@@ -10,7 +10,6 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtCore import QTimer
-import random
 import server as serv
 import logging
 from plotter_client import plotter_client
@@ -21,14 +20,26 @@ class MyThread(QtCore.QThread):
     def  __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.server = serv.port()
+        self.pcl = plotter_client()
         self.data_measure = None
         self.data_targets = None
-        self.pcl = plotter_client()
 
     def run(self):
-        self.data_measure = self.server.recv()
-        self.pcl.send(measure=str(self.data_measure[0]), target=str(self.data_targets.item()[0]))
+        try:
+                self.data_measure = self.server.recv()    
+        except:
+                pass
 
+        
+        measure = self.data_measure[0]
+        target = str(list(self.data_targets.values())[0])
+        print(f'measure = {measure} target = {target}')
+
+        try:
+                self.pcl.send(measure=measure, target=target)
+        except:
+                print('No')
+        
     def set_targets(self):
         self.server.send(self.data_targets)
 
@@ -261,11 +272,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        #start thread for measure recieving
-        self.my_thread = MyThread()
-        self.my_thread.start()
-        self.my_thread.finished.connect(self.on_finished)
-        self.start_selection()
+
 
         #add target button functional
         self.pitotTragetButton.clicked.connect(lambda: self.set_target(self.pitotTragetButton.objectName()))
@@ -273,6 +280,8 @@ class Ui_MainWindow(object):
         self.staticTargetButton.clicked.connect(lambda: self.set_target(self.staticTargetButton.objectName()))
         self.staticRateTargetButton.clicked.connect(lambda: self.set_target(self.staticRateTargetButton.objectName()))
 
+
+        #targets' structures
         self.target_map = {self.pitotTragetButton.objectName() : 0.0, \
                            self.pitotRateTargetButton.objectName() : 0.0, \
                            self.staticTargetButton.objectName(): 0.0,
@@ -285,7 +294,14 @@ class Ui_MainWindow(object):
         logging.basicConfig(level=logging.INFO, filename="logger.log",filemode="w",
                     format="%(asctime)s %(levelname)s %(message)s")
 
-
+        #start thread for measure recieving
+        self.my_thread = MyThread()
+        self.my_thread.data_targets = self.target_map
+        self.my_thread.data_measure = [0, 0, 0, 0]
+        self.my_thread.start()
+        self.my_thread.finished.connect(self.on_finished)
+        self.start_selection()
+        
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -311,23 +327,27 @@ class Ui_MainWindow(object):
         self.picktimer.timeout.connect(self.my_thread.start)
         self.picktimer.start()
 
-    def set_new_data(self, data):
-        measurements = [x for x in data.split()]
+    def set_new_data(self):
+
+        measurements = [x for x in self.my_thread.data_measure.split()]
         print(measurements)
         
         self.current_value_0.setText(measurements[0])
         self.current_value_1.setText(measurements[1])
         self.current_value_2.setText(measurements[2])
         self.current_value_3.setText(measurements[3])
+
+        print(list(self.my_thread.data_targets.values()))
+
+        #log
         logging.info(f'measurements: {" ".join(measurements)} \
-                     targets: {" ".join(self.my_thread.data_targets.items())}')
+                     targets: {self.my_thread.data_targets}')
         
         #self.progressBar.setValue(random.randint(0, 100)) # <- you may edit power level
         self.progressBar.setValue(99)
 
     def on_finished(self):      # Вызывается при завершении потока
-        self.new_data = self.my_thread.data_measure
-        self.set_new_data(self.new_data)
+        self.set_new_data()
 
     def closeEvent(self, event):
         self.my_thread.server.close()

@@ -7,7 +7,7 @@ import json
 ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
 
 hostname = socket.gethostname()
-port = 12346
+port = 12345
 
 
 def send():
