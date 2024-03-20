@@ -3,21 +3,25 @@ import time
 import random
 
 
-hostname = socket.gethostname()
-port = 12345
+class plotter_client:
+    def __init__(self):
+        self.port = 12345
+        self.hostname = socket.gethostname()
+        
 
-def send():
+    def send(self, measure="0.0", target="0.0"):
 
-    time.sleep(0.5)
-    client = socket.socket()
-    client.connect((hostname, port))
+        measure = str(random.random())
+        target = str(random.random())
+        time.sleep(0.5)
+        self.client = socket.socket()
+        self.client.connect((self.hostname, self.port))
+        message = (measure + ' ' + target).encode()
+        self.client.send(message)
+        self.client.close()
 
-    measure = str(random.random())
-    print(measure)
-    message = measure.encode()
-    client.send(message)
-    client.close()
+if __name__ == '__main__':
+    pcl = plotter_client()
 
-
-while True:
-    send()
+    while 1:
+        pcl.send()

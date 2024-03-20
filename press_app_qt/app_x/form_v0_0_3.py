@@ -13,6 +13,7 @@ from PyQt5.QtCore import QTimer
 import random
 import server as serv
 import logging
+from plotter_client import plotter_client
 
 #tread for comminication with arduino
 class MyThread(QtCore.QThread):
@@ -20,13 +21,16 @@ class MyThread(QtCore.QThread):
     def  __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.server = serv.port()
-        self.data = None
+        self.data_measure = None
+        self.data_targets = None
+        self.pcl = plotter_client()
 
     def run(self):
-        self.data = self.server.recv()
+        self.data_measure = self.server.recv()
+        self.pcl.send(measure=str(self.data_measure[0]), target=str(self.data_targets.item()[0]))
 
     def set_targets(self):
-        self.server.send(self.data)
+        self.server.send(self.data_targets)
 
 
 
@@ -297,7 +301,7 @@ class Ui_MainWindow(object):
             self.target_values[caller].setText(text)
             self.target_map[caller] = float(text)
             #print(self.target_map)
-            self.my_thread.data = self.target_map
+            self.my_thread.data_targets = self.target_map
             self.my_thread.set_targets()
 
     def start_selection(self):
@@ -316,13 +320,13 @@ class Ui_MainWindow(object):
         self.current_value_2.setText(measurements[2])
         self.current_value_3.setText(measurements[3])
         logging.info(f'measurements: {" ".join(measurements)} \
-                     targets: {" ".join(self.my_thread.data.items())}')
+                     targets: {" ".join(self.my_thread.data_targets.items())}')
         
         #self.progressBar.setValue(random.randint(0, 100)) # <- you may edit power level
         self.progressBar.setValue(99)
 
     def on_finished(self):      # Вызывается при завершении потока
-        self.new_data = self.my_thread.data
+        self.new_data = self.my_thread.data_measure
         self.set_new_data(self.new_data)
 
     def closeEvent(self, event):

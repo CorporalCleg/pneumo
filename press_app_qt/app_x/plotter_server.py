@@ -1,48 +1,64 @@
 import socket
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from icecream import ic
 
-time = [1]
-data = [0.0]
-
-fig, ax = plt.subplots()
-graph = ax.plot(time, data)[0]
-plt.ylim(-2, 2)
 
 class server():
-    def __init__(self):
+    def __init__(self, window_size=10):
         self.server = socket.socket()
         self.hostname = socket.gethostname()
         self.port = 12345
         self.server.bind((self.hostname, self.port))
         self.server.listen(5)
+        self.window_size = window_size
+        self.time = [0]
+        self.targets = [0.0]
+        self.data = [0.0]
         
         
         
     
-    def recv(self, frame):
-        global graph
+    def recv_n_redraw(self, frame):
+
+        #get telemetry from server
         self.conn, _ = self.server.accept()
         d = self.conn.recv(1024)
         self.conn.close()
-        data.append(float(d.decode()))
-        time.append(time[-1] + 1)
-
-        if len(data) > 6:
-            graph.set_xdata(time)
-            graph.set_ydata(data)
-            plt.xlim(time[-6], time[-1])
-            
-
-    # def send(self, target: dict):
-    #     self.conn, _ = self.server.accept()
-    #     data = json.dumps(target).encode()
-    #     data = self.conn.send(data)
-    #     self.conn.close()
-    #     print('call')
-
-    #     return
+        
+        measure, target = d.decode().split()
     
-s = server()
-anim = FuncAnimation(fig, lambda frame: s.recv(frame), frames = None)
-plt.show()
+        if len(self.time) > self.window_size:
+
+            #update values
+            self.data = self.data[-self.window_size:] + [float(measure)]
+            self.targets = self.targets[-self.window_size:] + [float(target)]
+            self.time = self.time[-self.window_size:] + [self.time[-1] + 1]
+
+            #render
+            axes.cla()
+            axes.set_ylim(-3, 3)
+            axes.set_xlim(self.time[-self.window_size], self.time[-1])
+            axes.plot(self.time, self.data, color="red", label='measurements')
+            axes.plot(self.time, self.targets, color="blue", label='target')
+            axes.legend(loc=1)
+
+            
+        else:
+            self.data.append(float(measure))
+            self.targets.append(float(target))
+            self.time.append(self.time[-1] + 1)
+
+    
+
+if __name__ == '__main__':
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
+
+
+    plt.style.use("ggplot")
+    plt.ylim(-2, 2)
+
+    s = server()
+    anim = FuncAnimation(fig, lambda frame: s.recv_n_redraw(frame), frames = None)
+
+    plt.show()
