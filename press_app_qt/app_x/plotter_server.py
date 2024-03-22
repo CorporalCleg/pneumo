@@ -7,7 +7,7 @@ from icecream import ic
 class pserver():
     def __init__(self, window_size=10):
         self.server = socket.socket()
-        self.hostname = 'localhost'
+        self.hostname = '0.0.0.0'
         print(self.hostname)
         self.port = 1414
         self.server.bind((self.hostname, self.port))
@@ -39,6 +39,7 @@ class pserver():
 
             #render
             axes.cla()
+            axes.set_title('Pressure')
             axes.set_ylim(-3, 3)
             axes.set_xlim(self.time[-self.window_size], self.time[-1])
             axes.plot(self.time, self.data, color="red", label='measurements')
