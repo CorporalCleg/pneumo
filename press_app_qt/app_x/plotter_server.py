@@ -1,6 +1,6 @@
 import socket
-import random
-import time
+
+
 class p_server:
     def __init__(self):
         self.server = socket.socket()
@@ -22,6 +22,9 @@ class p_server:
         self.conn.close()
 
 if __name__ == "__main__":
+    import random
+    import time
+    
     srvr = p_server()
     while True:
         time.sleep(0.5)

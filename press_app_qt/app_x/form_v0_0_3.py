@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QInputDialog
 from PyQt5.QtCore import QTimer
 import server as serv
 import logging
-from plotter_client import plotter_client
+from plotter_server import p_server
 
 #tread for comminication with arduino
 class MyThread(QtCore.QThread):
@@ -20,7 +20,7 @@ class MyThread(QtCore.QThread):
     def  __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.server = serv.port()
-        self.pcl = plotter_client()
+        self.p_srvr = p_server()
         self.data_measure = None
         self.data_targets = None
 

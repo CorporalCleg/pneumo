@@ -44,6 +44,8 @@ class p_client():
             axes.set_xlim(self.time[-self.window_size], self.time[-1])
             axes.plot(self.time, self.data, color="red", label='measurements')
             axes.plot(self.time, self.targets, color="blue", label='target')
+
+            axes.grid(True, linestyle='-.')
             axes.legend(loc=1)
             
         else:
@@ -59,10 +61,12 @@ if __name__ == '__main__':
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(10, 5))
 
 
+    
     plt.style.use("ggplot")
+
     plt.ylim(-2, 2)
 
     clnt = p_client()
     anim = FuncAnimation(fig, lambda frame: clnt.recv_n_redraw(frame), frames = None, interval=50)
-
+    
     plt.show()
