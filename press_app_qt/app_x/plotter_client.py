@@ -33,14 +33,15 @@ class p_client():
         if len(self.time) > self.window_size:
 
             #update values
-            self.data = self.data[-self.window_size:] + [float(measure)]
+            self.data = self.data[-self.window_size:] + [abs(float(measure))]
             self.targets = self.targets[-self.window_size:] + [float(target)]
             self.time = self.time[-self.window_size:] + [self.time[-1] + 1]
 
             #render
             axes.cla()
             axes.set_title('Pressure')
-            axes.set_ylim(-3, 3)
+
+            axes.set_ylim(min(self.data + self.targets) - 1, max(self.data + self.targets) + 1)
             axes.set_xlim(self.time[-self.window_size], self.time[-1])
             axes.plot(self.time, self.data, color="red", label='measurements')
             axes.plot(self.time, self.targets, color="blue", label='target')

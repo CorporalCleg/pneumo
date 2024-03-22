@@ -17,31 +17,44 @@ from plotter_server import p_server
 #tread for comminication with arduino
 class MyThread(QtCore.QThread):
     mysignal = QtCore.pyqtSignal(str)
-    def  __init__(self, parent=None):
+    def  __init__(self, parent=None, data_measure='0 0 0 0', data_targets='<0 0 0 0>'):
         QtCore.QThread.__init__(self, parent)
         self.server = serv.port()
         self.p_srvr = p_server()
-        self.data_measure = None
-        self.data_targets = None
+        self.__data_measure = data_measure
+        self.__data_targets = data_targets
 
+    @property
+    def data_measure(self) -> str:
+         return self.__data_measure
+    
+    @property
+    def data_targets(self) -> str:
+         return self.__data_targets
+    
     def run(self):
         try:
-                self.data_measure = self.server.recv()    
+                self.__data_measure = self.server.recv()
+                print(f'self.data_measure = {self.__data_measure}')
+                if self.__data_measure == b'':
+                     self.__data_measure = '0 0 0 0' 
         except:
                 pass
 
         
-        measure = self.data_measure[0]
-        target = str(list(self.data_targets.values())[0])
+        measure = self.__data_measure.split()[0]
+        target = str(list(self.__data_targets.values())[0])
         print(f'measure = {measure} target = {target}')
 
         try:
-                self.pcl.send(measure=measure, target=target)
+                print('trying')
+                self.p_srvr.send(measure=measure, target=target)
         except:
                 print('No')
         
-    def set_targets(self):
-        self.server.send(self.data_targets)
+    def set_targets(self, target_map):
+        self.__data_targets = target_map
+        self.server.send(self.__data_targets)
 
 
 
@@ -296,8 +309,7 @@ class Ui_MainWindow(object):
 
         #start thread for measure recieving
         self.my_thread = MyThread()
-        self.my_thread.data_targets = self.target_map
-        self.my_thread.data_measure = [0, 0, 0, 0]
+        self.my_thread.set_targets(self.target_map)
         self.my_thread.start()
         self.my_thread.finished.connect(self.on_finished)
         self.start_selection()
@@ -316,11 +328,10 @@ class Ui_MainWindow(object):
         if ok:
             self.target_values[caller].setText(text)
             self.target_map[caller] = float(text)
-            #print(self.target_map)
-            self.my_thread.data_targets = self.target_map
-            self.my_thread.set_targets()
+            self.my_thread.set_targets(self.target_map)
 
     def start_selection(self):
+
         # Repeating timer, calls random_pick over and over.
         self.picktimer = QTimer()
         self.picktimer.setInterval(500)

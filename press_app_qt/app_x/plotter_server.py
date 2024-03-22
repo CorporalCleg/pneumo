@@ -13,19 +13,9 @@ class p_server:
 
     def send(self, measure="0.0", target="0.0"):
 
-        measure = str(random.random())
-        print(measure)
+        print(f'server got: {measure}')
         message = (measure + ' ' + target).encode()
 
         self.conn, _ = self.server.accept()
         self.conn.send(message)
         self.conn.close()
-
-if __name__ == "__main__":
-    import random
-    import time
-    
-    srvr = p_server()
-    while True:
-        time.sleep(0.5)
-        srvr.send()
