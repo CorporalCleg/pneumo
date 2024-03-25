@@ -17,13 +17,13 @@ from plotter_server import p_server
 #tread for comminication with arduino
 class MyThread(QtCore.QThread):
     mysignal = QtCore.pyqtSignal(str)
-    def  __init__(self, parent=None, data_measure='0 0 0 0', data_targets='<0 0 0 0>'):
+    def  __init__(self, parent=None, with_graph=False, data_measure='0 0 0 0', data_targets='<0 0 0 0>'):
         QtCore.QThread.__init__(self, parent)
         self.server = serv.port()
         self.p_srvr = p_server()
         self.__data_measure = data_measure
         self.__data_targets = data_targets
-
+        self.__with_graph = with_graph
     @property
     def data_measure(self) -> str:
          return self.__data_measure
@@ -46,11 +46,12 @@ class MyThread(QtCore.QThread):
         target = str(list(self.__data_targets.values())[0])
         print(f'measure = {measure} target = {target}')
 
-        try:
-                print('trying')
-                self.p_srvr.send(measure=measure, target=target)
-        except:
-                print('No')
+        if self.__with_graph:
+                try:
+                        print('trying')
+                        self.p_srvr.send(measure=measure, target=target)
+                except:
+                        print('No')
         
     def set_targets(self, target_map):
         self.__data_targets = target_map
@@ -59,7 +60,7 @@ class MyThread(QtCore.QThread):
 
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow, graph):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(786, 600)
         MainWindow.setStyleSheet("background-color: rgb(212, 214, 232);")
@@ -308,7 +309,7 @@ class Ui_MainWindow(object):
                     format="%(asctime)s %(levelname)s %(message)s")
 
         #start thread for measure recieving
-        self.my_thread = MyThread()
+        self.my_thread = MyThread(with_graph=graph)
         self.my_thread.set_targets(self.target_map)
         self.my_thread.start()
         self.my_thread.finished.connect(self.on_finished)
@@ -343,7 +344,7 @@ class Ui_MainWindow(object):
         measurements = [x for x in self.my_thread.data_measure.split()]
         print(measurements)
         
-        self.current_value_0.setText(measurements[0])
+        self.current_value_0.setText(measurements[0].lstrip('-'))
         self.current_value_1.setText(measurements[1])
         self.current_value_2.setText(measurements[2])
         self.current_value_3.setText(measurements[3])

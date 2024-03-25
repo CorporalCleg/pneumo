@@ -35,13 +35,15 @@ class p_client():
             #update values
             self.data = self.data[-self.window_size:] + [abs(float(measure))]
             self.targets = self.targets[-self.window_size:] + [float(target)]
-            self.time = self.time[-self.window_size:] + [self.time[-1] + 1]
+            self.time = self.time[-self.window_size:] + [self.time[-1] + 0.5]
 
             #render
             axes.cla()
             axes.set_title('Pressure')
 
-            axes.set_ylim(min(self.data + self.targets) - 1, max(self.data + self.targets) + 1)
+            axes.set_xlabel("time, )")
+            axes.set_ylabel("Pressure, kPa")
+            axes.set_ylim(min(self.data + self.targets) - 0.25, max(self.data + self.targets) + 0.25)
             axes.set_xlim(self.time[-self.window_size], self.time[-1])
             axes.plot(self.time, self.data, color="red", label='measurements')
             axes.plot(self.time, self.targets, color="blue", label='target')
@@ -54,7 +56,7 @@ class p_client():
             axes.plot(self.time, self.targets, color="blue", label='target')
             self.data.append(float(measure))
             self.targets.append(float(target))
-            self.time.append(self.time[-1] + 1)
+            self.time.append(self.time[-1] + 0.5)
 
     
 
@@ -63,7 +65,7 @@ if __name__ == '__main__':
 
 
     
-    plt.style.use("ggplot")
+    plt.style.use("Solarize_Light2")
 
     plt.ylim(-2, 2)
 
