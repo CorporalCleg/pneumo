@@ -35,13 +35,14 @@ class MyThread(QtCore.QThread):
     def run(self):
         try:
                 self.__data_measure = self.server.recv()
-                print(f'self.data_measure = {self.__data_measure}')
-                if self.__data_measure == b'':
+                print(f'measurements = {self.__data_measure}')
+                if self.__data_measure == '':
+                     print('Problem on the Arduino side')
                      self.__data_measure = '0 0 0 0' 
         except:
                 pass
 
-        
+        print(f'measure: {self.__data_measure}')
         measure = self.__data_measure.split()[0]
         target = str(list(self.__data_targets.values())[0])
         print(f'measure = {measure} target = {target}')
@@ -342,14 +343,18 @@ class Ui_MainWindow(object):
     def set_new_data(self):
 
         measurements = [x for x in self.my_thread.data_measure.split()]
-        print(measurements)
-        
-        self.current_value_0.setText(measurements[0].lstrip('-'))
-        self.current_value_1.setText(measurements[1])
-        self.current_value_2.setText(measurements[2])
-        self.current_value_3.setText(measurements[3])
 
-        print(list(self.my_thread.data_targets.values()))
+        #print(measurements)
+        
+        try:
+                self.current_value_0.setText(measurements[0].lstrip('-'))
+                self.current_value_1.setText(measurements[1])
+                self.current_value_2.setText(measurements[2])
+                self.current_value_3.setText(measurements[3])
+        except:
+             print('No update')
+        
+        #print(list(self.my_thread.data_targets.values()))
 
         #log
         logging.info(f'measurements: {" ".join(measurements)} \

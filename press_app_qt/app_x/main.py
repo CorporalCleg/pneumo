@@ -15,6 +15,7 @@ def application(graph=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--graph", help="set True to see graphics", type=bool, default=False)
+    parser.add_argument("--graph", help="set True to see graphics", action='store_true')
     args = parser.parse_args()
-    application(graph=False)
+    print('Start execution with graphics') if args.graph else print('Start execution without graphics') 
+    application(graph=args.graph)

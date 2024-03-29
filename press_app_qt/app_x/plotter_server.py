@@ -13,9 +13,9 @@ class p_server:
 
     def send(self, measure="0.0", target="0.0"):
 
-        print(f'server got: {measure}')
         message = (measure + ' ' + target).encode()
-
+        print('server connecting..')
         self.conn, _ = self.server.accept()
         self.conn.send(message)
         self.conn.close()
+        print(f'server send: {measure}')

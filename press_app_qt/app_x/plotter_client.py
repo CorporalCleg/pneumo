@@ -1,7 +1,6 @@
 import socket
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from icecream import ic
 
 
 class p_client():
@@ -25,7 +24,6 @@ class p_client():
 
         #get telemetry from server
         d = client.recv(1024)
-        ic(d)
         client.close()
 
         measure, target = d.decode().split()
